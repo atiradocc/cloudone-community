@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument( "--stackName", type=str, default="Conformity-WellArchitectedReview-Sync", help="Name used to create the Conformity->Well-Architected Review sync stack")
 parser.add_argument("--workloadArn", type=str, required=True, help="Well-Architected Review to synchronize")
+parser.add_argument("--accountId", type=str, required=True, help="Cloud One Account Id from which to gather Conformity check information")
 args = parser.parse_args()
 
 cfnClient = boto3.client("cloudformation")
@@ -27,7 +28,10 @@ outputs = stack["Outputs"]
 lambdaFunctionArn = [ x["OutputValue"] for x in outputs if x["OutputKey"] == "LambdaFunctionName" ][0]
 
 lambdaClient = boto3.client("lambda")
-arguments = {"workloadArn": f"{args.workloadArn}"}
+arguments = {
+    "workloadArn": f"{args.workloadArn}",
+    "accountId": f"{args.accountId}"
+    }
 response = lambdaClient.invoke( FunctionName=f"{lambdaFunctionArn}", InvocationType="RequestResponse", Payload=json.dumps(arguments).encode("utf-8"))
 apiResponse = json.loads(response['Payload'].read().decode('utf-8'))
 print(json.dumps(apiResponse, indent=4))

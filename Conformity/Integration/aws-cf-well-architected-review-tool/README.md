@@ -17,11 +17,14 @@ For further details, see the resources below:
 - Administrator access to the AWS Console. In default, sufficient access rights to run CloudFormation templates and to invoke Lambda functions from the [AWS CLI](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) or [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html)
 - Ensure the [workload has been defined](https://docs.aws.amazon.com/wellarchitected/latest/userguide/define-workload.html) in the AWS Well Architected tool
 - Have the following information available:
-  - [**Cloud One Account Id**](https://cloudone.trendmicro.com/docs/cloud-account-management/aws/#cloud-account-page)
-  - [**Cloud One Service Region**](https://cloudone.trendmicro.com/docs/identity-and-account-management/c1-regions/)
-  - [**Cloud One API Key**](https://cloudone.trendmicro.com/docs/identity-and-account-management/c1-api-key/) with Full Access (Admin)
-  - [**Cloud One Conformity AWS Account Id**](https://cloudone.trendmicro.com/docs/cloud-account-management/aws/#cloud-account-page)
-  - [**Cloud One Conformity External Id**](https://cloudone.trendmicro.com/docs/conformity/api-reference/tag/External-IDs)
+  - [Cloud One Account Id](https://cloudone.trendmicro.com/docs/cloud-account-management/aws/#cloud-account-page)
+  - [Cloud One Service Region](https://cloudone.trendmicro.com/docs/identity-and-account-management/c1-regions/)
+  - [Cloud One API Key](https://cloudone.trendmicro.com/docs/identity-and-account-management/c1-api-key/) with Full Access (Admin)
+  - [Cloud One Conformity AWS Account Id](https://cloudone.trendmicro.com/docs/cloud-account-management/aws/#cloud-account-page)
+  - [Cloud One Conformity External Id](https://cloudone.trendmicro.com/docs/conformity/api-reference/tag/External-IDs)
+- Determine the following details according to your own needs:
+  - **Owner:** Preferably an email for a role or person responsible for the sync within your organization
+  - **Environment:** Deployment enviroment for the sync (staging, test, production)
 
 ## Installation
 
@@ -36,9 +39,9 @@ There are two options for installing this integration:
 ### CLI Installation
 
 - Step 1: Run the `configure-stack.py` script with the appropriate values:
-  `configure-stack.py [-h] --accountId ACCOUNTID --region {trend-us-1,us-1,au-1,ie-1,sg-1,in-1,jp-1,ca-1,de-1} --apiKey APIKEY --conformityAccountId CONFORMITYACCOUNTID --externalId EXTERNALID --owner OWNER --environment ENVIRONMENT`
+  `configure-stack.py [-h] --region {trend-us-1,us-1,au-1,ie-1,sg-1,in-1,jp-1,ca-1,de-1} --apiKey APIKEY --conformityAccountId CONFORMITYACCOUNTID --externalId EXTERNALID --owner OWNER --environment ENVIRONMENT`
 - Step 2: Run the `sync.py` script with the appropriate values:
-  `sync.py [-h] [--stackName STACKNAME] --workloadArn WORKLOADARN`
+  `sync.py [-h] [--stackName STACKNAME] --workloadArn WORKLOADARN --accountId ACCOUNTID`
 
 Note: Step #2 is the 'sync'. Invoke it to update the well-architected review of your choice.
 

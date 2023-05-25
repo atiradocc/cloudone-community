@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Set up the API sync between Cloud One Conformity and the AWS Well-Architected Tool
 Parameters:
-  CloudOneAccountId:
-    Type: String
-    Description: Cloud One Account Id of the AWS account containing the Well-Architected review(s) to synchronize (can be obtained from Conformity Dashboard)
   CloudOneRegion:
     Type: String
     Description: Cloud One service region
@@ -38,10 +35,6 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "Well-Architected Review"
-        Parameters:
-          - CloudOneAccountId
-      - Label:
           default: "Cloud One Parameters"
         Parameters:
           - CloudOneRegion
@@ -54,8 +47,6 @@ Metadata:
           - Environment
           - Owner
     ParameterLabels:
-      CloudOneAccountId:
-        default: "Cloud One Account Id containing the Well-Architected Review"
       CloudOneRegion:
         default: "Cloud One Service Region"
       CloudOneAPIKey:
@@ -81,15 +72,6 @@ Resources:
       Description: Cloud One API Key with Admin Access
       SecretString:
         Ref: CloudOneAPIKey
-  C1AccountId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /TrendMicro/CloudOne/Conformity/wellarchitected-sync/C1AccountId
-      DataType: text
-      Type: String
-      Description: Cloud One Account Id of the AWS account containing the Well Architected Review to synchronize (can be obtained from Conformity Dashboard)
-      Value:
-        Ref: CloudOneAccountId
   C1ConformitySyncPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -252,7 +234,6 @@ Resources:
           parameters = parametersClient.get_parameters_by_path(Path=f'{parametersPath}/')
 
           getParameter = lambda name : [ x for x in parameters['Parameters'] if x['Name'] == f'{parametersPath}/{name}' ][0]['Value']
-          AccountId = getParameter('C1AccountId')
           RoleArn = getParameter('C1ConformitySyncRoleArn')
           Region = getParameter('C1CRegion')
 
@@ -270,20 +251,21 @@ Resources:
             logger.info(f'Received payload: {event}')
 
             response = None
-            if 'workloadArn' not in event:
+            if ('workloadArn' not in event) or ('accountId' not in event):
               response = {
                 "statusCode": 400,
                 "body": {
-                  "message": 'Missing parameter workloadArn',
+                  "message": 'Missing parameter workloadArn and/or accountId. See documentation for details at https://github.com/trendmicro/cloudone-community/tree/main/Conformity/Integration/aws-cf-well-architected-review-tool',
                   "input": event
                 }
               }
               logger.info(f'workloadArn parameter is missing. Returning an error: {response}')
             else:
               workloadArn = event['workloadArn']
+              accountId = event['accountId']
               arguments = {
                 'meta': {
-                  "accountId": f'{AccountId}',
+                  "accountId": f'{accountId}',
                   "roleArn": f'{RoleArn}',
                   "workloadArn": f'{workloadArn}'
                 }
@@ -302,7 +284,7 @@ Resources:
                 "statusCode": 200,
                 "body": json.loads(decodedResponse)
               }
-
+              
             return response
       TracingConfig:
         Mode: Active
