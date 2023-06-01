@@ -10,7 +10,7 @@ For further details, see the resources below:
 
 - See [AWS Well Architected Tool](https://cloudone.trendmicro.com/docs/conformity/aws-integration/#aws-well-architected-tool) for further details about Conformity's integration with the Well Architected tool.
 
-- See [Conformity Well Architected API](https://cloudone.trendmicro.com/docs/conformity/api-reference/tag/Well-Architected-Tool) for further details about the Conformity WellArchitected sync API.
+- See [Conformity Well-Architected API](https://cloudone.trendmicro.com/docs/conformity/api-reference/tag/Well-Architected-Tool) for further details about the Conformity WellArchitected sync API.
 
 ## Pre-requisites
 
