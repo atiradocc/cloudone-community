@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Set up the API sync between Cloud One Conformity and the AWS Well-Architected Tool
 Parameters:
+  AWSOrgId:
+    Type: String
+    Description: AWS Organization Id - Provide it only if you intend to sync any reviews within an organization rather than just reviews in one account
+    Default: ""
   CloudOneRegion:
     Type: String
     Description: Cloud One service region
@@ -31,9 +35,19 @@ Parameters:
   Owner:
     Type: String
     Description: Provide the owner's email address
+#Conditions:
+#  ProvidedOrgId:
+#    Fn::Not:
+#      - Fn::Equals:
+#          - Ref: AWSOrgId
+#          - ""
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
+      #      - Label:
+      #          default: "AWS Organization Parameters"
+      #        Parameters:
+      #          - AWSOrgId
       - Label:
           default: "Cloud One Parameters"
         Parameters:
@@ -55,6 +69,8 @@ Metadata:
         default: "AWS Account Id of Cloud One Conformity"
       ExternalId:
         default: "Cloud One Conformity External Id"
+#      AWSOrgId:
+#        default: "[Optional] AWS Organization Id (root or OU)"
 Resources:
   C1CRegion:
     Type: AWS::SSM::Parameter
@@ -86,6 +102,13 @@ Resources:
               - "wellarchitected:GetAnswer"
               - "wellarchitected:UpdateAnswer"
             Resource: "*"
+  #            Condition:
+  #              Fn::If:
+  #                - ProvidedOrgId
+  #                - ForAnyValue:StringLike:
+  #                    aws:ResourceOrgPaths:
+  #                      - Fn::Sub: "${AWSOrgId}/*"
+  #                - Ref: AWS::NoValue
   C1ConformitySyncRole:
     Type: AWS::IAM::Role
     DependsOn:
@@ -98,8 +121,7 @@ Resources:
           - Effect: Allow
             Principal:
               AWS:
-                Fn::Join:
-                  [":", ["arn:aws:iam:", Ref: ConformityAccountId, "root"]]
+                Fn::Sub: "arn:aws:iam::${ConformityAccountId}:root"
             Action:
               - "sts:AssumeRole"
             Condition:
@@ -158,18 +180,7 @@ Resources:
             Action:
               - "ssm:GetParametersByPath"
             Resource:
-              Fn::Join:
-                [
-                  ":",
-                  [
-                    "arn",
-                    Ref: AWS::Partition,
-                    "ssm",
-                    Ref: AWS::Region,
-                    Ref: AWS::AccountId,
-                    "parameter/TrendMicro/CloudOne/Conformity/wellarchitected-sync/*",
-                  ],
-                ]
+              Fn::Sub: "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TrendMicro/CloudOne/Conformity/wellarchitected-sync/*"
   C1ConformitySyncLambdaRole:
     Type: AWS::IAM::Role
     DependsOn:
@@ -214,7 +225,7 @@ Resources:
         - arm64
       Handler: index.lambda_handler
       PackageType: Zip
-      Timeout: 10
+      Timeout: 20
       Code:
         ZipFile: |
           import os
@@ -302,3 +313,8 @@ Outputs:
     Description: Use this for invocation, i.e with the AWS CLI, AWS CloudShell or the sync.py script
     Value:
       Fn::GetAtt: [C1ConformitySyncUpdateReview, Arn]
+#  OrgIdProvided:
+#    Description: AWS Organization Id Provided (root or OU)
+#    Value:
+#      Ref: AWSOrgId
+#    Condition: ProvidedOrgId

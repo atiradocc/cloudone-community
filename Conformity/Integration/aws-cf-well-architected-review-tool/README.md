@@ -45,6 +45,21 @@ There are two options for installing this integration:
 
 Note: Step #2 is the 'sync'. Invoke it to update the well-architected review of your choice.
 
+## Removal
+
+There are two options for removing this integration:
+
+### Console Removal
+
+- Log in to your [AWS Console](https://console.aws.amazon.com/)
+- Select the AWS CloudFormation Stack `Conformity-WellArchitected-sync`
+- Click on "Delete"
+
+### CLI Removal
+
+Run the `uninstall.py` script with the appropriate values:
+`uninstall.py [-h] [--stackName STACKNAME]`
+
 ## Resources
 
 The sync tool will set up the following resources in your AWS account:
