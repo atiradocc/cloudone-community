@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(
     Also assumes your AWS CLI is configured and that you have sufficient permissions
     to run 'aws cloudformation create-stack' with CAPABILITY_NAMED_IAM.'
     ''')
-#parser.add_argument('--awsOrgId', type=str, default=None, help='AWS Organization Id (Root or OU)')
+parser.add_argument('--awsOrgId', type=str, default=None, help='AWS Organization Id (Root or OU)')
 parser.add_argument('--region', type=str, required=True, choices=[
                     'trend-us-1', 'us-1', 'au-1', 'ie-1', 'sg-1', 'in-1', 'jp-1', 'ca-1', 'de-1'], help='Cloud One Service region')
 parser.add_argument('--apiKey', type=str, required=True,
@@ -63,12 +63,12 @@ parameters = [
         'UsePreviousValue': True 
     }
 ]
-#if (args.awsOrgId is not None):
-#    parameters.append({
-#        'ParameterKey': 'AWSOrgId',
-#        'ParameterValue': f'{args.awsOrgId}',
-#        'UsePreviousValue': True 
-#    })
+if (args.awsOrgId is not None):
+   parameters.append({
+       'ParameterKey': 'AWSOrgId',
+       'ParameterValue': f'{args.awsOrgId}',
+       'UsePreviousValue': True 
+   })
 
 with open('conformity-wellarchitected-sync.yaml', 'r') as reader:
     response = client.create_stack(StackName='Conformity-WellArchitectedReview-Sync',

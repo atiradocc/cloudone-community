@@ -35,19 +35,19 @@ Parameters:
   Owner:
     Type: String
     Description: Provide the owner's email address
-#Conditions:
-#  ProvidedOrgId:
-#    Fn::Not:
-#      - Fn::Equals:
-#          - Ref: AWSOrgId
-#          - ""
+Conditions:
+  ProvidedOrgId:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: AWSOrgId
+          - ""
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      #      - Label:
-      #          default: "AWS Organization Parameters"
-      #        Parameters:
-      #          - AWSOrgId
+      - Label:
+          default: "AWS Organization Parameters"
+        Parameters:
+          - AWSOrgId
       - Label:
           default: "Cloud One Parameters"
         Parameters:
@@ -69,8 +69,8 @@ Metadata:
         default: "AWS Account Id of Cloud One Conformity"
       ExternalId:
         default: "Cloud One Conformity External Id"
-#      AWSOrgId:
-#        default: "[Optional] AWS Organization Id (root or OU)"
+      AWSOrgId:
+        default: "[Optional] AWS Organization Id (root or OU)"
 Resources:
   C1CRegion:
     Type: AWS::SSM::Parameter
@@ -88,6 +88,28 @@ Resources:
       Description: Cloud One API Key with Admin Access
       SecretString:
         Ref: CloudOneAPIKey
+  C1ConformitySyncOrgPolicy:
+    Type: AWS::Organizations::Policy
+    Condition: ProvidedOrgId
+    Properties:
+      Content:
+        Version: 2012-10-17
+        Statement:
+          - Sid: C1ConformitySyncOrgPolicyStatement
+            Effect: Allow
+            Action:
+              - "wellarchitected:GetAnswer"
+              - "wellarchitected:UpdateAnswer"
+            Principal:
+              AWS:
+                Fn::Sub: "arn:aws:iam::${ConformityAccountId}:root"
+            Resource: "*"
+            Condition:
+              ForAnyValue:StringLike:
+                aws:ResourceOrgPaths:
+                  - Fn::Sub: "${AWSOrgId}/*"
+      Name: C1ConformitySyncOrgPolicy
+      Type: SERVICE_CONTROL_POLICY
   C1ConformitySyncPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -95,20 +117,13 @@ Resources:
       Description: Allows updating the answers in all well-architected reviews in this account
       Path: /
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Action:
               - "wellarchitected:GetAnswer"
               - "wellarchitected:UpdateAnswer"
             Resource: "*"
-  #            Condition:
-  #              Fn::If:
-  #                - ProvidedOrgId
-  #                - ForAnyValue:StringLike:
-  #                    aws:ResourceOrgPaths:
-  #                      - Fn::Sub: "${AWSOrgId}/*"
-  #                - Ref: AWS::NoValue
   C1ConformitySyncRole:
     Type: AWS::IAM::Role
     DependsOn:
@@ -313,8 +328,8 @@ Outputs:
     Description: Use this for invocation, i.e with the AWS CLI, AWS CloudShell or the sync.py script
     Value:
       Fn::GetAtt: [C1ConformitySyncUpdateReview, Arn]
-#  OrgIdProvided:
-#    Description: AWS Organization Id Provided (root or OU)
-#    Value:
-#      Ref: AWSOrgId
-#    Condition: ProvidedOrgId
+  OrgIdProvided:
+    Description: AWS Organization Id Provided (root or OU)
+    Value:
+      Ref: AWSOrgId
+    Condition: ProvidedOrgId
